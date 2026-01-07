@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
 
         {/* CENTER: Copyright */}
         <div className="text-center text-gray-600 text-sm">
-          © {new Date().getFullYear()} DMIF-Certification. All rights reserved.
+          © {new Date().getFullYear()} WiseMigrate. All rights reserved.
         </div>
 
         {/* RIGHT: Social Icons */}

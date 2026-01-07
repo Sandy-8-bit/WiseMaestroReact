@@ -1,7 +1,5 @@
 import * as React from "react";
 import {
-  BookOpen,
-  CheckCircle,
   Command,
   Frame,
   Home,
@@ -34,31 +32,6 @@ const data = {
       title: "Home",
       url: appRoutes.home,
       icon: Home,
-      active: true,
-    },
-    {
-      title: "Courses",
-      url: appRoutes.course.path,
-      icon: BookOpen,
-      items: [
-        {
-          title: "Ongoing",
-          url: appRoutes.myCourses.path,
-        },
-        {
-          title: "Completed",
-          url: "#",
-        },
-        {
-          title: "Saved",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Certifications",
-      url: appRoutes.certifications,
-      icon: CheckCircle,
       active: true,
     },
   ],

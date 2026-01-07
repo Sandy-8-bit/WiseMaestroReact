@@ -1,32 +1,15 @@
-import { appRoutes } from '@/routes/appRoutes'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { toast } from 'react-hot-toast'
+export const AUTH_KEYS = {
+  accessToken: "access_token-wiseMaestro",
+  refreshToken: "refresh_token-wiseMaestro",
+};
 
-// eslint-disable-next-line react-refresh/only-export-components
-export function authHandler() {
-  const token = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('token='))
-    ?.split('=')[1]
+export const isAuthenticated = (): boolean => {
+  const token = localStorage.getItem(AUTH_KEYS.accessToken);
+  return Boolean(token);
+};
 
-  if (!token) {
-    HandleUnauthorized()
-  }
 
-  return token
-}
-
-export function HandleUnauthorized() {
-  const navigate = useNavigate()
-  const location = useLocation()
-
-  return () => {
-    toast.error('Unauthorized. Please login again.')
-
-    setTimeout(() => {
-      const currentPath = location.pathname + location.search
-      const redirectPath = `${appRoutes.signInPage}?redirect=${encodeURIComponent(currentPath)}`
-      navigate(redirectPath, { replace: true })
-    }, 8000)
-  }
-}
+export const clearAuthStorage = () => {
+  localStorage.removeItem(AUTH_KEYS.accessToken);
+  localStorage.removeItem(AUTH_KEYS.refreshToken);
+};

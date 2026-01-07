@@ -24,6 +24,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { clearAuthStorage } from "@/utils/authHandler";
+import { appRoutes } from "@/routes/appRoutes";
 export function NavUser({
   user,
 }: {
@@ -34,6 +39,20 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+
+      clearAuthStorage();
+
+      toast.success("Logged out successfully");
+      navigate(appRoutes.auth.signIn, { replace: true });
+    } catch (error: any) {
+      toast.error(error?.message || "Logout failed");
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -55,6 +74,7 @@ export function NavUser({
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
@@ -73,14 +93,18 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <Sparkles />
                 Upgrade to Pro
               </DropdownMenuItem>
             </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <BadgeCheck />
@@ -95,8 +119,14 @@ export function NavUser({
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+
+            {/* ✅ LOGOUT */}
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-red-600 focus:text-red-600"
+            >
               <LogOut />
               Log out
             </DropdownMenuItem>

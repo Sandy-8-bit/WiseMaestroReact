@@ -1,11 +1,18 @@
-export interface SignUpRequest {
-  name: string;
+import type { Session, User } from "@supabase/supabase-js";
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  username: string;
+}
+
+
+export interface LoginRequest {
   email: string;
   password: string;
 }
 
-export interface SignUpResponse {
-  id: string;
-  role: string;
-  email: string;
+export interface SupabaseAuthResponse {
+  user: User;
+  session: Session | null;
 }

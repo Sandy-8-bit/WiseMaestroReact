@@ -9,46 +9,40 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { appRoutes } from "@/routes/appRoutes";
+import { useLogin } from "@/queries/AuthQueries"; // ✅ import hook
+import { supabase } from "@/lib/supabase";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
   const navigate = useNavigate();
+  const { mutate: login, isPending } = useLogin();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    login(
+      { email, password },
+      {
+        onSuccess: ({ user }) => {
+          // ✅ email verification check
+          if (!user.email_confirmed_at) {
+            toast("Please verify your email first");
+            navigate("/verify-email");
+            return;
+          }
 
-    setLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    // User exists but email not verified
-    if (!data.user?.email_confirmed_at) {
-      toast("Please verify your email first");
-      navigate("/verify-email");
-      return;
-    }
-
-    toast.success("Welcome back");
-    navigate(appRoutes.home);
+          navigate(appRoutes.home);
+        },
+      }
+    );
   };
 
   return (
@@ -72,7 +66,7 @@ export function LoginForm({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="m@example.com"
+            placeholder="Enter Your Email"
             required
           />
         </Field>
@@ -90,6 +84,7 @@ export function LoginForm({
           <Input
             id="password"
             type="password"
+            placeholder="Enter Your Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -97,8 +92,8 @@ export function LoginForm({
         </Field>
 
         <Field>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Logging in..." : "Login"}
           </Button>
         </Field>
 

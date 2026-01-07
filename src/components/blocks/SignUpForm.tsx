@@ -9,25 +9,30 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
-import type { SignUpRequest } from "@/types/AuthTypes";
 import toast from "react-hot-toast";
 import { appRoutes } from "@/routes/appRoutes";
+import { useSignup } from "@/queries/AuthQueries"; // ✅ NEW
 
 interface SignupFormProps extends React.ComponentProps<"form"> {
   className?: string;
   setEmail: React.Dispatch<React.SetStateAction<string>>;
   setIsOtpFormVisible: (visible: boolean) => void;
 }
+
+interface SignUpForm {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
 export function SignupForm({
   className,
   setEmail,
   setIsOtpFormVisible,
   ...props
 }: SignupFormProps) {
-  interface SignUpForm extends SignUpRequest {
-    confirmPassword: string;
-  }
+  const { mutate: signup, isPending } = useSignup();
 
   const [form, setForm] = useState<SignUpForm>({
     name: "",
@@ -36,15 +41,15 @@ export function SignupForm({
     confirmPassword: "",
   });
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange =
-    (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    (key: keyof SignUpForm) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       setForm((f) => ({ ...f, [key]: e.target.value }));
     };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -53,29 +58,28 @@ export function SignupForm({
       return;
     }
 
-    setLoading(true);
-
-    const { error, data } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: {
-          name: form.name,
-        },
+    signup(
+      {
+        email: form.email,
+        password: form.password,
+        username: form.name,
       },
-    });
+      {
+        onSuccess: ({ user }) => {
+          // 🔐 Email verification flow
+          if (!user.email_confirmed_at) {
+            setEmail(form.email);
+            setIsOtpFormVisible(true);
+            return;
+          }
 
-    setLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    if (!data.user?.email_confirmed_at) {
-      setEmail(form.email);
-      setIsOtpFormVisible(true);
-    }
+          toast.success("Account created successfully 🎉");
+        },
+        onError: (err: any) => {
+          toast.error(err?.message || "Signup failed");
+        },
+      }
+    );
   };
 
   return (
@@ -98,7 +102,7 @@ export function SignupForm({
             id="name"
             value={form.name}
             onChange={handleChange("name")}
-            placeholder="John Doe"
+            placeholder="Enter Your Name"
             required
           />
         </Field>
@@ -110,7 +114,7 @@ export function SignupForm({
             type="email"
             value={form.email}
             onChange={handleChange("email")}
-            placeholder="m@example.com"
+            placeholder="Enter Your Email"
             required
           />
         </Field>
@@ -122,34 +126,41 @@ export function SignupForm({
             type="password"
             value={form.password}
             onChange={handleChange("password")}
+            placeholder="Enter Your Password"
             required
           />
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
+          <FieldLabel htmlFor="confirm-password">
+            Confirm Password
+          </FieldLabel>
           <Input
             id="confirm-password"
             type="password"
             value={form.confirmPassword}
+            placeholder="Conform Your Password"
             onChange={handleChange("confirmPassword")}
             required
           />
         </Field>
 
-        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+        {error && (
+          <p className="text-sm text-red-500 text-center">
+            {error}
+          </p>
+        )}
 
         <Field>
-          <Button type="submit" disabled={loading} className="cursor-pointer">
-            {loading ? "Creating account..." : "Create Account"}
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Creating account..." : "Create Account"}
           </Button>
         </Field>
 
         <FieldSeparator>Or continue with</FieldSeparator>
 
         <Field>
-          <Button variant="outline" type="button" className="cursor-pointer">
-            {/* Google icon stays */}
+          <Button variant="outline" type="button">
             <img width={16} src="/icons/google.svg" alt="google" />
             Sign up with Google
           </Button>
